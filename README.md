@@ -1,7 +1,7 @@
 # ML-MICE comparison
 Welcome! This repository contains R scripts to run simulation studies to compare the default and ML implementations of MICE. 
 
-## Code for Simulation Study - Single Covariate and Interaction settings
+## Code for simulation - Single Covariate and Interaction settings
 
 The repository contains the following R scripts: 
 
@@ -17,7 +17,7 @@ The repository contains the following R scripts:
 
 - `04_run_sim.R` demonstrates how to run the simulation on the HPC 
 
-## Code for Simulation Study - simulation based on the INOPulse trial 
+## Code for simulation study based on the INOPulse trial 
 
 - `07_mvpa_functions.R` contains functions to run the simulation study
   
