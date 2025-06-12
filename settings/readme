@@ -1,4 +1,4 @@
-#Readme
+# README
 
-#all_settings.RDS contains settings for the single covariate setting and interaction setting. 
-#mvpa
+# all_settings.RDS contains parameter values and settings for the single covariate and interaction simulation. 
+# mvpa_settings.RDS contains parameter values and settings for the simulation based on the Inopulse trial. 
