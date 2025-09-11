@@ -27,7 +27,11 @@ The repository contains the following R scripts:
 
 ## Results
 
-Plot displaying results from the simulation studies are provided in the results folders 
+Plots displaying results from the simulation studies are provided in the results folders: 
+
+- Results_summarised contains plots presented in the main text of the paper and Supplementary File 2.
+
+- Results_Single_Covariate and Results_Interactions contains plots with detailed results. 
 
 
 Please contact Mia.Tackney@mrc-bsu.cam.ac.uk for any queries/comments.
