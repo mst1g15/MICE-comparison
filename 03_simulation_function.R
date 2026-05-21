@@ -3,7 +3,7 @@
 #parallelisation within the HPC 
 #-------------------------------------------------------------------------------
 
-run_sim <- function(td=NULL, ss, miss, nsim, method, tuning, response, interact=NULL){
+run_sim <- function(td=NULL, ss, miss, nsim, method, tuning, response, interact=NULL, M=30){
   
   
   #each repetition of simulation 
@@ -37,7 +37,7 @@ run_sim <- function(td=NULL, ss, miss, nsim, method, tuning, response, interact=
     df_miss_1 <- df_miss %>% filter(treat==1)
     
     #use try in case of imputation failing (e.g. with rf)
-    final_results <- try(impute_by_arm_method(df_miss_0, df_miss_1, response, method, tuning, interact))
+    final_results <- try(impute_by_arm_method(df_miss_0, df_miss_1, response, method, tuning, interact, M))
     
     #if this did not run (for example with rf), outcomes are all NA 
     if (!is.data.frame(final_results)){

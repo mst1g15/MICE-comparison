@@ -4,12 +4,14 @@
 #-------------------------------------------------------------------------------
 
 
-impute_by_arm_method <- function(df_miss_0, df_miss_1, y_var, method, tuning=NULL, interact=NULL){
+impute_by_arm_method <- function(df_miss_0, df_miss_1, y_var, method, tuning=NULL, interact=NULL, M=30){
   #input: df_miss_0: dataframe where arm is 0 
   #       df_miss_1: dataframe where arm is 1 
-  #       y_var: character for the particular yvar to use (between 1 and 4)
+  #       y_var: character for the particular yvar to use (between 1 and 6 for no interaction, 
+  #              and between 1 and 4 in the presence of interaction)
   #       method: character for imputation method: "pmm", "norm" "rf", "cart", "superlearner
-  #       tuning: optional input for cart and rf - ML tuning parameters 
+  #       tuning: optional input for cart and rf - ML tuning parameters" 
+  #       M: number of imputations 
   
   
   #assume that the final analysis model will regress on 
@@ -46,29 +48,29 @@ impute_by_arm_method <- function(df_miss_0, df_miss_1, y_var, method, tuning=NUL
       SL.lib <- c("SL.mean", "SL.glm", "SL.gam", "SL.randomForest")
       
       # Perform the multiple imputation for the current y variable
-      imp_0 <- mice(df_miss_0[, c("x",  y_var)], m=30, method="SuperLearner", SL.lib=SL.lib, kernel="gaussian", bw=c(0.25, 1, 5), print=FALSE)
-      imp_1 <- mice(df_miss_1[, c("x",  y_var)], m=30, method="SuperLearner", SL.lib=SL.lib, kernel="gaussian", bw=c(0.25, 1, 5), print=FALSE)
+      imp_0 <- mice(df_miss_0[, c("x",  y_var)], m=M, maxit=1, method="SuperLearner", SL.lib=SL.lib, kernel="gaussian", bw=c(0.25, 1, 5), print=FALSE)
+      imp_1 <- mice(df_miss_1[, c("x",  y_var)], m=M, maxit=1, method="SuperLearner", SL.lib=SL.lib, kernel="gaussian", bw=c(0.25, 1, 5), print=FALSE)
       
     }else if(method=="pmm_default"){
       
-      imp_0 <- mice(df_miss_0[, c("x",  y_var)], m = 30, method="pmm", print=F)
-      imp_1 <- mice(df_miss_1[, c("x",  y_var)], m = 30, method="pmm", print=F)
+      imp_0 <- mice(df_miss_0[, c("x",  y_var)], m=M, maxit=1,method="pmm", print=F)
+      imp_1 <- mice(df_miss_1[, c("x",  y_var)], m=M, maxit=1,method="pmm", print=F)
       
     }else if(method=="norm_default"){
       
-      imp_0 <- mice(df_miss_0[, c("x",  y_var)], m = 30, method="norm", print=F)
-      imp_1 <- mice(df_miss_1[, c("x",  y_var)], m = 30, method="norm", print=F)
+      imp_0 <- mice(df_miss_0[, c("x",  y_var)], m=M, maxit=1,method="norm", print=F)
+      imp_1 <- mice(df_miss_1[, c("x",  y_var)], m=M, maxit=1,method="norm", print=F)
       
     }else if(method == "rf"){
       
-      imp_0 <- mice(df_miss_0[, c("x",  y_var)], m = 30, method="rf", print=F, ntree=tuning)
-      imp_1 <- mice(df_miss_1[, c("x",  y_var)], m = 30, method="rf", print=F, ntree=tuning)
+      imp_0 <- mice(df_miss_0[, c("x",  y_var)], m=M, maxit=1,method="rf", print=F, ntree=tuning)
+      imp_1 <- mice(df_miss_1[, c("x",  y_var)], m=M, maxit=1,method="rf", print=F, ntree=tuning)
       
     }else if(method=="cart"){
       
       # Perform the multiple imputation for the current y variable
-      imp_0 <- mice(df_miss_0[, c("x",  y_var)], m = 30, method="cart", minbucket=tuning, print=F)
-      imp_1 <- mice(df_miss_1[, c("x",  y_var)], m = 30, method="cart", minbucket=tuning, print=F)
+      imp_0 <- mice(df_miss_0[, c("x",  y_var)], m=M, maxit=1,method="cart", minbucket=tuning, print=F)
+      imp_1 <- mice(df_miss_1[, c("x",  y_var)], m=M, maxit=1, method="cart", minbucket=tuning, print=F)
       
     }
     
@@ -99,9 +101,9 @@ impute_by_arm_method <- function(df_miss_0, df_miss_1, y_var, method, tuning=NUL
   }
   
   
+  #THIS APPROACH IS NO LONGER USED IN THE INVESTIGATION
   if(method=="pmm_nonlinear" | method=="norm_nonlinear"){
-    #now assume the true response in the imputation and outcome model 
-    
+  
     impute_method = ifelse(method=="pmm_nonlinear", "pmm", "norm")
     
     if(interact=="FALSE" & y_var=="y2"){
@@ -109,8 +111,8 @@ impute_by_arm_method <- function(df_miss_0, df_miss_1, y_var, method, tuning=NUL
       df_miss_0$xsq <-exp(-(df_miss_0$x))
       df_miss_1$xsq <-exp(-(df_miss_1$x))
       
-      imp_0 <- mice(df_miss_0[, c("xsq", y_var)], m = 30, method=impute_method, print=F)
-      imp_1 <- mice(df_miss_1[, c("xsq", y_var)], m = 30, method=impute_method, print=F)
+      imp_0 <- mice(df_miss_0[, c("xsq", y_var)], m=M, maxit=1,method=impute_method, print=F)
+      imp_1 <- mice(df_miss_1[, c("xsq", y_var)], m=M, maxit=1,method=impute_method, print=F)
       
       complete_0 <- complete(imp_0, include=TRUE, action="long")
       complete_0$treat = 0
@@ -131,8 +133,8 @@ impute_by_arm_method <- function(df_miss_0, df_miss_1, y_var, method, tuning=NUL
       df_miss_1$xsq <-df_miss_1$x>0
       
       # Perform the multiple imputation for the current y variable
-      imp_0 <- mice(df_miss_0[, c("xsq", y_var)], m = 30, method=impute_method, print=F)
-      imp_1 <- mice(df_miss_1[, c("xsq", y_var)], m = 30, method=impute_method, print=F)
+      imp_0 <- mice(df_miss_0[, c("xsq", y_var)], m=M, maxit=1,method=impute_method, print=F)
+      imp_1 <- mice(df_miss_1[, c("xsq", y_var)], m=M, maxit=1,method=impute_method, print=F)
       
       complete_0 <- complete(imp_0, include=TRUE, action="long")
       complete_0$treat = 0
@@ -153,8 +155,8 @@ impute_by_arm_method <- function(df_miss_0, df_miss_1, y_var, method, tuning=NUL
       df_miss_1$xsq <-  cos(2*pi*3*df_miss_1$x*0.15 + 4)
       
       # Perform the multiple imputation for the current y variable
-      imp_0 <- mice(df_miss_0[, c("xsq", y_var)], m = 30, method=impute_method, print=F)
-      imp_1 <- mice(df_miss_1[, c("xsq", y_var)], m = 30, method=impute_method, print=F)
+      imp_0 <- mice(df_miss_0[, c("xsq", y_var)], m=M, maxit=1,method=impute_method, print=F)
+      imp_1 <- mice(df_miss_1[, c("xsq", y_var)], m=M, maxit=1,method=impute_method, print=F)
       
       complete_0 <- complete(imp_0, include=TRUE, action="long")
       complete_0$treat = 0
@@ -176,8 +178,8 @@ impute_by_arm_method <- function(df_miss_0, df_miss_1, y_var, method, tuning=NUL
       df_miss_1$xsq <-  df_miss_1$x^2
       
       # Perform the multiple imputation for the current y variable
-      imp_0 <- mice(df_miss_0[, c("x", "xsq", y_var)], m = 30, method=impute_method, print=F)
-      imp_1 <- mice(df_miss_1[, c("x", "xsq", y_var)], m = 30, method=impute_method, print=F)
+      imp_0 <- mice(df_miss_0[, c("x", "xsq", y_var)], m=M,maxit=1, method=impute_method, print=F)
+      imp_1 <- mice(df_miss_1[, c("x", "xsq", y_var)], m=M,maxit=1, method=impute_method, print=F)
       
       complete_0 <- complete(imp_0, include=TRUE, action="long")
       complete_0$treat = 0
@@ -198,8 +200,8 @@ impute_by_arm_method <- function(df_miss_0, df_miss_1, y_var, method, tuning=NUL
       df_miss_1$xsq <-  df_miss_1$x^2
       
       # Perform the multiple imputation for the current y variable
-      imp_0 <- mice(df_miss_0[, c("xsq", y_var)], m = 30, method=impute_method, print=F)
-      imp_1 <- mice(df_miss_1[, c("xsq", y_var)], m = 30, method=impute_method, print=F)
+      imp_0 <- mice(df_miss_0[, c("xsq", y_var)], m=M, maxit=1,method=impute_method, print=F)
+      imp_1 <- mice(df_miss_1[, c("xsq", y_var)], m=M, maxit=1,method=impute_method, print=F)
       
       complete_0 <- complete(imp_0, include=TRUE, action="long")
       complete_0$treat = 0
@@ -221,8 +223,8 @@ impute_by_arm_method <- function(df_miss_0, df_miss_1, y_var, method, tuning=NUL
       df_miss_1$xsq <-df_miss_1$x^2
       
       # Perform the multiple imputation for the current y variable
-      imp_0 <- mice(df_miss_0[, c("x", "xsq", y_var)], m = 30, method=impute_method, print=F)
-      imp_1 <- mice(df_miss_1[, c("x", "xsq", y_var)], m = 30, method=impute_method, print=F)
+      imp_0 <- mice(df_miss_0[, c("x", "xsq", y_var)], m=M,maxit=1, method=impute_method, print=F)
+      imp_1 <- mice(df_miss_1[, c("x", "xsq", y_var)], m=M,maxit=1, method=impute_method, print=F)
       
       complete_0 <- complete(imp_0, include=TRUE, action="long")
       complete_0$treat = 0
@@ -240,12 +242,12 @@ impute_by_arm_method <- function(df_miss_0, df_miss_1, y_var, method, tuning=NUL
     }else if(interact==TRUE & y_var=="y4"){
       
       
-      df_miss_0$xsq <-df_miss_0$x^4     #######not sure about this! 
+      df_miss_0$xsq <-df_miss_0$x^4      
       df_miss_1$xsq <-df_miss_1$x^4
       
       # Perform the multiple imputation for the current y variable
-      imp_0 <- mice(df_miss_0[, c("x", "xsq", y_var)], m = 30, method=impute_method, print=F)
-      imp_1 <- mice(df_miss_1[, c("x", "xsq", y_var)], m = 30, method=impute_method, print=F)
+      imp_0 <- mice(df_miss_0[, c("x", "xsq", y_var)], m=M, maxit=1,method=impute_method, print=F)
+      imp_1 <- mice(df_miss_1[, c("x", "xsq", y_var)], m=M,maxit=1, method=impute_method, print=F)
       
       complete_0 <- complete(imp_0, include=TRUE, action="long")
       complete_0$treat = 0
